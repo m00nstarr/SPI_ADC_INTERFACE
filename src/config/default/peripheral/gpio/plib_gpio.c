@@ -74,6 +74,8 @@ void GPIO_Initialize ( void )
     /* PORTH Initialization */
     /* PORTJ Initialization */
     /* PORTK Initialization */
+    LATK = 0x0; /* Initial Latch Value */
+    TRISKCLR = 0x20; /* Direction Control */
 
     /* Unlock system for PPS configuration */
     SYSKEY = 0x00000000;

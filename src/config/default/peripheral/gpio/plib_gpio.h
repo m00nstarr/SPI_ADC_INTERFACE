@@ -87,6 +87,15 @@
 #define SPI1_MISO_Get()               ((PORTD >> 14) & 0x1)
 #define SPI1_MISO_PIN                  GPIO_PIN_RD14
 
+/*** Macros for ADC_RESET pin ***/
+#define ADC_RESET_Set()               (LATKSET = (1<<5))
+#define ADC_RESET_Clear()             (LATKCLR = (1<<5))
+#define ADC_RESET_Toggle()            (LATKINV= (1<<5))
+#define ADC_RESET_OutputEnable()      (TRISKCLR = (1<<5))
+#define ADC_RESET_InputEnable()       (TRISKSET = (1<<5))
+#define ADC_RESET_Get()               ((PORTK >> 5) & 0x1)
+#define ADC_RESET_PIN                  GPIO_PIN_RK5
+
 /*** Macros for SPI1_SCK pin ***/
 #define SPI1_SCK_Get()               ((PORTD >> 1) & 0x1)
 #define SPI1_SCK_PIN                  GPIO_PIN_RD1

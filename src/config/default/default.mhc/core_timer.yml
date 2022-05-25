@@ -3,4 +3,4 @@ type: UniqueComponent
 attributes: {id: core_timer}
 children:
 - type: ElementPosition
-  attributes: {x: '660', y: '20', id: core_timer}
+  attributes: {x: '22', y: '50', id: core_timer}

@@ -49,13 +49,22 @@ int main ( void )
     /* Initialize all modules */
     SYS_Initialize ( NULL );
 
+    adcStartup();
+    adc_channel_data adc;
+    
     while ( true )
     {
-        SPI2_Slave_Select(1);
-        SPI2_WriteRead(&txData, sizeof(txData), &rxData, sizeof(rxData));
-        SPI2_Slave_Select(0);
+        //spiSendReceiveArrays(dataTx, dataRx, numberOfBytes);
+        bool result = readData(&adc);   
         #ifdef DEBUG
-            printf("%d\r\n", rxData);
+        if (result == true){
+            printf("true\r\n");
+        }
+        printf("channel 0 : %d\r\n", adc.channel0);
+        printf("channel 1 : %d\r\n", adc.channel1);
+        printf("channel 2 : %d\r\n", adc.channel2);
+        printf("channel 3 : %d\r\n", adc.channel3);
+        printf("\r\n");
         #endif
     }
 
