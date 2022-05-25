@@ -1,3 +1,4 @@
+
 /**
  * \copyright Copyright (C) 2019 Texas Instruments Incorporated - http://www.ti.com/
  *
@@ -30,29 +31,34 @@
  *  OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  *
  */
+
 #include "adc_ic.h"
-#include "peripheral/coretimer/plib_coretimer.h"
-#include "peripheral/gpio/plib_gpio.h"
-#include "peripheral/spi/spi_master/plib_spi2_master.h"
+
 //****************************************************************************
 //
 // Internal variables
 //
 //****************************************************************************
+
 // Array used to recall device register map configurations */
 static uint16_t             registerMap[NUM_REGISTERS];
 
 // Array of SPI word lengths
 const static uint8_t        wlength_byte_values[] = {2, 3, 4, 4};
 
+
+
 //****************************************************************************
 //
 // Internal function prototypes
 //
 //****************************************************************************
+
 uint8_t     buildSPIarray(const uint16_t opcodeArray[], uint8_t numberOpcodes, uint8_t byteArray[]);
 uint16_t    enforce_selected_device_modes(uint16_t data);
 uint8_t     getWordByteLength(void);
+
+
 
 //*****************************************************************************
 //
@@ -72,94 +78,10 @@ uint8_t     getWordByteLength(void);
 //*****************************************************************************
 uint16_t getRegisterValue(uint8_t address)
 {
+    assert(address < NUM_REGISTERS);
     return registerMap[address];
 }
 
-//*****************************************************************************
-//
-//! Sends SPI byte on MOSI pin and captures MISO return byte value.
-//!
-//! \fn uint8_t spiSendReceiveByte(const uint8_t dataTx)
-//!
-//! \param const uint8_t dataTx data byte to send on MOSI pin.
-//!
-//! NOTE: This function is called by spiSendReceiveArrays(). If it is called
-//! directly, then the /CS pin must also be directly controlled.
-//!
-//! \return Captured MISO response byte.
-//
-//*****************************************************************************
-uint8_t spiSendReceiveByte(uint8_t dataTx)
-{
-    /*  --- INSERT YOUR CODE HERE ---
-     *  This function should send and receive single bytes over the SPI.
-     *  NOTE: This function does not control the /CS pin to allow for
-     *  more programming flexibility.
-     */
-
-    // Remove any residual or old data from the receive FIFO
-//    uint32_t junk;
-//    while (SSIDataGetNonBlocking(SSI_BASE_ADDR, &junk));
-    
-//    // SSI TX & RX
-      uint8_t dataRx;
-//    MAP_SSIDataPut(SSI_BASE_ADDR, (uint32_t) dataTx);
-//    MAP_SSIDataGet(SSI_BASE_ADDR, (uint32_t *) &dataRx);
-    SPI2_WriteRead(&dataTx, sizeof(dataTx), &dataRx, sizeof(dataRx));
- 
-    return dataRx;
-}
-
-
-//*****************************************************************************
-//
-//! Sends SPI byte array on MOSI pin and captures MISO data to a byte array.
-//!
-//! \fn void spiSendReceiveArrays(const uint8_t dataTx[], uint8_t dataRx[], const uint8_t byteLength)
-//!
-//! \param const uint8_t dataTx[] byte array of SPI data to send on MOSI.
-//!
-//! \param uint8_t dataRx[] byte array of SPI data captured on MISO.
-//!
-//! \param uint8_t byteLength number of bytes to send & receive.
-//!
-//! NOTE: Make sure 'dataTx[]' and 'dataRx[]' contain at least as many bytes of data,
-//! as indicated by 'byteLength'.
-//!
-//! \return None.
-//
-//*****************************************************************************
-void spiSendReceiveArrays(uint8_t dataTx[], uint8_t dataRx[], const uint8_t byteLength)
-{
-    /*  --- INSERT YOUR CODE HERE ---
-     *
-     *  This function should send and receive multiple bytes over the SPI.
-     *
-     *  A typical SPI send/receive sequence may look like the following:
-     *  1) Make sure SPI receive buffer is empty
-     *  2) Set the /CS pin low (if controlled by GPIO)
-     *  3) Send command bytes to SPI transmit buffer
-     *  4) Wait for SPI receive interrupt
-     *  5) Retrieve data from SPI receive buffer
-     *  6) Set the /CS pin high (if controlled by GPIO)
-     */
-
-    // Require that dataTx and dataRx are not NULL pointers
-    //assert(dataTx && dataRx);
-
-    // Set the nCS pin LOW
-    SPI2_NCS_Clear();
-
-    // Send all dataTx[] bytes on MOSI, and capture all MISO bytes in dataRx[]
-    int i;
-    for (i = 0; i < byteLength; i++)
-    {
-        dataRx[i] = spiSendReceiveByte(dataTx[i]);
-    }
-
-    // Set the nCS pin HIGH
-    SPI2_NCS_Set();
-}
 
 
 //*****************************************************************************
@@ -178,24 +100,23 @@ void spiSendReceiveArrays(uint8_t dataTx[], uint8_t dataRx[], const uint8_t byte
 void adcStartup(void)
 {
 	/* (OPTIONAL) Provide additional delay time for power supply settling */
-	CORETIMER_DelayMs(50);  
+	delay_ms(50);
 
 	/* (REQUIRED) Set nRESET pin high for ADC operation */
-	//setSYNC_RESET(HIGH);
-    ADC_RESET_Set();
-            
+	setSYNC_RESET(HIGH);
+
 	/* (OPTIONAL) Toggle nRESET pin to ensure default register settings. */
 	/* NOTE: This also ensures that the device registers are unlocked.	 */
-	//toggleRESET();
+	toggleRESET();
 
     /* (REQUIRED) Initialize internal 'registerMap' array with device default settings */
 	restoreRegisterDefaults();
 
     /* (OPTIONAL) Validate first response word when beginning SPI communication: (0xFF40 | CHANCNT) */
-	//uint16_t response = sendCommand(OPCODE_NULL);
+	uint16_t response = sendCommand(OPCODE_NULL);
 
 	/* (OPTIONAL) Define your initial register settings here */
-    //writeSingleRegister(CLOCK_ADDRESS, (CLOCK_DEFAULT & ~CLOCK_OSR_MASK) | CLOCK_OSR_256);
+    writeSingleRegister(CLOCK_ADDRESS, (CLOCK_DEFAULT & ~CLOCK_OSR_MASK) | CLOCK_OSR_256);
 
     /* (REQUIRED) Configure MODE register settings
      * NOTE: This function call is required here for this particular code implementation to work.
@@ -224,8 +145,6 @@ void adcStartup(void)
 uint16_t readSingleRegister(uint8_t address)
 {
 	/* Check that the register address is in range */
-	//assert(address < NUM_REGISTERS);
-
 // Build TX and RX byte array
 #ifdef ENABLE_CRC_IN
     uint8_t dataTx[8] = { 0 };      // 2 words, up to 4 bytes each = 8 bytes maximum
@@ -265,7 +184,7 @@ uint16_t readSingleRegister(uint8_t address)
 void writeSingleRegister(uint8_t address, uint16_t data)
 {
     /* Check that the register address is in range */
-    //assert(address < NUM_REGISTERS);
+    assert(address < NUM_REGISTERS);
 
     // (OPTIONAL) Enforce certain register field values when
     // writing to the MODE register to fix the operation mode
@@ -332,7 +251,7 @@ bool readData(adc_channel_data *DataStruct)
 #endif
 
     /* Set the nCS pin LOW */
-    SPI2_NCS_Clear();
+    setCS(LOW);
 
     // Send NULL word, receive response word
     for (i = 0; i < bytesPerWord; i++)
@@ -354,7 +273,7 @@ bool readData(adc_channel_data *DataStruct)
         dataRx[i] = spiSendReceiveByte(dataTx[i]);
     }
     DataStruct->channel0 = signExtend(dataRx);
-    crcWord = calculateCRC(dataRx, bytesPerWord, crcWord);
+    //crcWord = calculateCRC(dataRx, bytesPerWord, crcWord);
 
 #if (CHANNEL_COUNT > 1)
 
@@ -364,7 +283,7 @@ bool readData(adc_channel_data *DataStruct)
         dataRx[i] = spiSendReceiveByte(0x00);
     }
     DataStruct->channel1 = signExtend(dataRx);
-    crcWord = calculateCRC(dataRx, bytesPerWord, crcWord);
+    //crcWord = calculateCRC(dataRx, bytesPerWord, crcWord);
 
 #endif
 #if (CHANNEL_COUNT > 2)
@@ -375,7 +294,7 @@ bool readData(adc_channel_data *DataStruct)
         dataRx[i] = spiSendReceiveByte(0x00);
     }
     DataStruct->channel2 = signExtend(dataRx);
-    crcWord = calculateCRC(dataRx, bytesPerWord, crcWord);
+    //crcWord = calculateCRC(dataRx, bytesPerWord, crcWord);
 
 #endif
 #if (CHANNEL_COUNT > 3)
@@ -386,7 +305,7 @@ bool readData(adc_channel_data *DataStruct)
         dataRx[i] = spiSendReceiveByte(0x00);
     }
     DataStruct->channel3 = signExtend(dataRx);
-    crcWord = calculateCRC(dataRx, bytesPerWord, crcWord);
+    //crcWord = calculateCRC(dataRx, bytesPerWord, crcWord);
 
 #endif
 
@@ -403,7 +322,7 @@ bool readData(adc_channel_data *DataStruct)
     //crcWord = calculateCRC(dataRx, bytesPerWord, crcWord);
 
     /* Set the nCS pin HIGH */
-    SPI2_NCS_Set();
+    setCS(HIGH);
 
     // Returns true when a CRC error occurs
     return ((bool) crcWord);
@@ -428,11 +347,11 @@ bool readData(adc_channel_data *DataStruct)
 uint16_t sendCommand(uint16_t opcode)
 {
     /* Assert if this function is used to send any of the following opcodes */
-//    assert(OPCODE_RREG != opcode);      /* Use "readSingleRegister()"   */
-//    assert(OPCODE_WREG != opcode);      /* Use "writeSingleRegister()"  */
-//    assert(OPCODE_LOCK != opcode);      /* Use "lockRegisters()"        */
-//    assert(OPCODE_UNLOCK != opcode);    /* Use "unlockRegisters()"      */
-//    assert(OPCODE_RESET != opcode);     /* Use "resetDevice()"          */
+    assert(OPCODE_RREG != opcode);      /* Use "readSingleRegister()"   */
+    assert(OPCODE_WREG != opcode);      /* Use "writeSingleRegister()"  */
+    assert(OPCODE_LOCK != opcode);      /* Use "lockRegisters()"        */
+    assert(OPCODE_UNLOCK != opcode);    /* Use "unlockRegisters()"      */
+    assert(OPCODE_RESET != opcode);     /* Use "resetDevice()"          */
 
     // Build TX and RX byte array
 #ifdef ENABLE_CRC_IN
@@ -445,8 +364,8 @@ uint16_t sendCommand(uint16_t opcode)
     uint8_t numberOfBytes = buildSPIarray(&opcode, 1, dataTx);
 
     /* Set the nCS pin LOW */
-    //setCS(LOW);
-    SPI2_NCS_Clear();
+    setCS(LOW);
+
     // Send the opcode (and crc word, if enabled)
     int i;
     for (i = 0; i < numberOfBytes; i++)
@@ -455,7 +374,7 @@ uint16_t sendCommand(uint16_t opcode)
     }
 
     /* Set the nCS pin HIGH */
-    SPI2_NCS_Set();
+    setCS(HIGH);
 
     // Combine response bytes and return as a 16-bit word
     uint16_t adcResponse = combineBytes(dataRx[0], dataRx[1]);
@@ -490,10 +409,10 @@ uint16_t resetDevice(void)
     uint8_t numberOfBytes   = buildSPIarray(&opcode, 1, dataTx);
 
     uint8_t bytesPerWord    = wlength_byte_values[WLENGTH];
-    uint8_t wordsInFrame    = CHANNEL_CNT + 2;
+    uint8_t wordsInFrame    = CHANNEL_COUNT + 2;
 
     // Set the nCS pin LOW
-    SPI2_NCS_Clear();
+    setCS(LOW);
 
     // Send the opcode (and CRC word, if enabled)
     int i;
@@ -509,14 +428,14 @@ uint16_t resetDevice(void)
     }
 
     // Set the nCS pin HIGH
-    SPI2_NCS_Set();
+    setCS(HIGH);
 
     // NOTE: The ADS131B04-Q1's next response word should be (0xFF44),
     // if the response is 0x0011 (acknowledge of RESET command), then the device
     // did not receive a full SPI frame and the reset did not occur!
 
     // tSRLRST delay, ~1ms with 2.048 MHz fCLK
-    CORETIMER_DelayMs(1);
+    delay_ms(1);
 
     // Print response
     uint16_t response = sendCommand(OPCODE_NULL);
@@ -646,12 +565,12 @@ bool unlockRegisters(void)
 uint16_t calculateCRC(const uint8_t dataBytes[], uint8_t numberBytes, uint16_t initialValue)
 {
 	/* Check that "dataBytes" is not a null pointer */
-	//assert(dataBytes != 0x00);
+	assert(dataBytes != 0x00);
 
 	int         bitIndex, byteIndex;
 	bool        dataMSb;						/* Most significant bit of data byte */
 	bool        crcMSb;						    /* Most significant bit of crc byte  */
-	//uint8_t     bytesPerWord = wlength_byte_values[WLENGTH];
+	uint8_t     bytesPerWord = wlength_byte_values[WLENGTH];
 
 	/*
      * Initial value of crc register

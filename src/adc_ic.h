@@ -69,7 +69,7 @@
 
     /* ID register address & default value */
     #define ID_ADDRESS                                                      ((uint8_t)  0x00)
-    #define ID_DEFAULT                                                      ((uint16_t) 0x4000 | (CHANNEL_CNT << 8))  // NOTE: May change with future device revisions!
+    #define ID_DEFAULT                                                      ((uint16_t) 0x4000 | (CHANNEL_COUNT << 8))  // NOTE: May change with future device revisions!
 
     /* RESERVED field mask */
     #define ID_RESERVED0_MASK                                               ((uint16_t) 0xF000)
@@ -923,12 +923,6 @@ typedef struct{
 #endif
 }adc_channel_data;
 
-//****************************************************************************
-//
-// Function prototypes
-//
-//****************************************************************************
-
 void        adcStartup(void);
 uint16_t    sendCommand(uint16_t op_code);
 bool        readData(adc_channel_data *DataStruct);
@@ -939,12 +933,9 @@ bool        unlockRegisters(void);
 uint16_t    resetDevice(void);
 void        restoreRegisterDefaults(void);
 uint16_t    calculateCRC(const uint8_t dataBytes[], uint8_t numberBytes, uint16_t initialValue);
-uint8_t     spiSendReceiveByte(uint8_t dataTx);
-void        spiSendReceiveArrays(uint8_t dataTx[], uint8_t dataRx[], const uint8_t byteLength);
 
 // Getter functions
 uint16_t    getRegisterValue(uint8_t address);
-uint8_t     getWordByteLength(void);
 
 // Helper functions
 uint8_t     upperByte(uint16_t uint16_Word);
@@ -953,11 +944,13 @@ uint16_t    combineBytes(uint8_t upperByte, uint8_t lowerByte);
 int32_t     signExtend(const uint8_t dataBytes[]);
 
 
+
 //****************************************************************************
 //
 // Register macros
 //
 //****************************************************************************
+
 /** Returns Number of Channels */
 #define CHANCNT             ((uint8_t) ((getRegisterValue(ID_ADDRESS) & ID_CHANCNT_MASK) >> 8))
 
@@ -984,6 +977,7 @@ int32_t     signExtend(const uint8_t dataBytes[]);
 
 /** Data rate register field setting */
 #define POWER_MODE          ((uint8_t) ((getRegisterValue(CLOCK_ADDRESS) & CLOCK_PWR_MASK) >> 0))
+
 
 #endif	/* ADC_IC_H */
 
