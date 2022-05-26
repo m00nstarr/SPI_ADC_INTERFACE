@@ -69,7 +69,7 @@
 
     /* ID register address & default value */
     #define ID_ADDRESS                                                      ((uint8_t)  0x00)
-    #define ID_DEFAULT                                                      ((uint16_t) 0x4000 | (CHANNEL_COUNT << 8))  // NOTE: May change with future device revisions!
+    #define ID_DEFAULT                                                      ((uint16_t) 0x4000 | (CHANNEL_CNT << 8))  // NOTE: May change with future device revisions!
 
     /* RESERVED field mask */
     #define ID_RESERVED0_MASK                                               ((uint16_t) 0xF000)
@@ -933,6 +933,9 @@ bool        unlockRegisters(void);
 uint16_t    resetDevice(void);
 void        restoreRegisterDefaults(void);
 uint16_t    calculateCRC(const uint8_t dataBytes[], uint8_t numberBytes, uint16_t initialValue);
+void        spiSendReceiveArrays(uint8_t dataTx[], uint8_t dataRx[], const uint8_t byteLength);
+uint8_t     spiSendReceiveByte(uint8_t dataTx);
+
 
 // Getter functions
 uint16_t    getRegisterValue(uint8_t address);
